@@ -13,7 +13,7 @@ from sklearn.model_selection import train_test_split
 from google.colab import drive
 drive.mount('/content/drive')
 
-data = pd.read_csv('/content/drive/MyDrive/data.csv', encoding='ISO-8859-1')
+data = pd.read_csv('/content/drive/MyDrive/data_2024_3.csv', encoding='euc-kr')
 
 # Shuffle the data
 data = data.sample(frac=1).reset_index(drop=True)
