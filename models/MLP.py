@@ -6,25 +6,34 @@ import numpy as np
 from torch.utils.data import DataLoader, TensorDataset
 
 #CPU 혹은 GPU 사용, GPU우선적으로 사용가능
-device = torch.device("cuda:0" if torch.cuda.is_avaliable() else "cpu")
-
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+ 
 # 데이터 불러오기 (전처리 완료된 데이터라고 가정)
-data = pd.read_csv('data.csv')
+# 이전의 전러치 코드에서 저장한 데이터 사용, val_data는  아마 eval에서 사용예정
+train_data = pd.read_csv("train_data.csv")
+test_data = pd.read_csv("test_data.csv") 
 
 # 특성과 타겟 변수 분리
-X = data.drop(columns=[' /타켓 컬럼 명/ ']).values
-y = data['/타켓 컬럼 명/'].values
+X_train = train_data.drop(columns=["관측미세먼지"]).values
+X_test = test_data.drop(columns=["관측미세먼지"]).values
+y_train = train_data["관측미세먼지"].values
+y_test = test_data["관측미세먼지"].values
+
+# 각각 train과 test를 알맞게 데이터와 매치, 관측 지점과 관측시간은 숫자형이 아니라서 일단 배제,추후 필요없는 특성이면 drop, 아니라면 다른 전처리 필요
+X_train = train_data.drop(columns=["관측미세먼지", "관측지점", "관측시간"]).apply(pd.to_numeric, errors='coerce').fillna(0).values
+X_test = test_data.drop(columns=["관측미세먼지", "관측지점", "관측시간"]).apply(pd.to_numeric, errors='coerce').fillna(0).values
+y_train = train_data["관측미세먼지"].apply(pd.to_numeric, errors='coerce').fillna(0).values
+y_test = test_data["관측미세먼지"].apply(pd.to_numeric, errors='coerce').fillna(0).values
+
+# 데이터셋 축소, 시연에서는 10%만 사용, 이후에는 숫자만 조정으로 데이터사이즈 조정,
+X_train, _, y_train, _ = train_test_split(X_train, y_train, train_size=0.1, random_state=42)
+X_test, _, y_test, _ = train_test_split(X_test, y_test, train_size=0.1, random_state=42)
 
 # Tensor로 변환
-X = torch.tensor(X, dtype=torch.float32)
-y = torch.tensor(y, dtype=torch.float32).view(-1, 1)
-
-# 데이터셋 나누기 (훈련 세트 : 테스트 세트 = 8 : 2 사이즈로)
-dataset_size = len(X)
-train_size = int(0.8 * dataset_size)
-test_size = dataset_size - train_size
-X_train, X_test = torch.split(X, [train_size, test_size])
-y_train, y_test = torch.split(y, [train_size, test_size])
+X_train = torch.tensor(X_train, dtype=torch.float32)
+y_train = torch.tensor(y_train, dtype=torch.float32).view(-1, 1)
+X_test = torch.tensor(X_test, dtype=torch.float32)
+y_test = torch.tensor(y_test, dtype=torch.float32).view(-1, 1)
 
 # DataLoader 정의
 train_dataset = TensorDataset(X_train, y_train)
@@ -55,23 +64,30 @@ model = MLP()
 
 # 손실 함수, 옵티마이저 정의
 criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+optimizer = optim.Adam(model.parameters(), lr=0.001)   # 0.01로 20인경우 5번째부터 verfiiting 발생  0.001에 epoch 20이 적당해보임
 
 # 모델 학습
-num_epochs = 10
+num_epochs = 20
 for epoch in range(num_epochs):
     model.train()
+    running_loss = 0.0
     for X_batch, y_batch in train_loader:
         optimizer.zero_grad()
         outputs = model(X_batch)
         loss = criterion(outputs, y_batch)
         loss.backward()
         optimizer.step()
+        running_loss += loss.item() * X_batch.size(0)
 
-     #학습 결과를 출력, 불필요할우 생략가능
-    if (epoch+1) % 10 == 0:  
-        print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}') 
+    epoch_loss = running_loss / len(train_loader.dataset)
 
+    #모델 성능 임시 테스트용, 삭제해도 무관
+    #model.eval()
+    #with torch.no_grad():
+      #  test_outputs = model(X_test)
+       # test_loss = criterion(test_outputs, y_test)
+
+    #print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {epoch_loss:.4f}, Test Loss: {test_loss.item():.4f}')
 # 모델 평가는 다른파일에서 실행하므로 이 파일에서는 test후 결과를 nparray로 반환하기까지만함
 
 # 예측 함수 정의
