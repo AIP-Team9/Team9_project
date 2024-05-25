@@ -46,7 +46,7 @@ def create_sequences(data, seq_length):
         y.append(data[i+seq_length-1,-1])
     return np.array(X), np.array(y)
 
-seq_length = 24 # 하루를 기준으로 잡음
+seq_length = 24 # 4시간을 기준으로 잡음
 X_train, y_train = create_sequences(X_train_scaled_data, seq_length)
 X_test,y_test=create_sequences(X_test_scaled_data, seq_length)
 
