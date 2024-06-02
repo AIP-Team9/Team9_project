@@ -7,7 +7,7 @@ import eval_vis
 def grid_search(model,train_data, train_label ,dataloader, param_grid , input_dim, output_dim , num_epochs = 10 , batch_size = 32) :
     results = []
 
-    param_list list(ParameterGrid(param_grid))
+    param_list = list(ParameterGrid(param_grid))
 
     for params in param_list :
         model_1 = model(input_dim , param_list, output_dim)
@@ -28,7 +28,7 @@ def grid_search(model,train_data, train_label ,dataloader, param_grid , input_di
         with torch.no_grad() :
             outputs = model_1(train_data)
             outputs = outputs.squeeze().numpy()
-            labels = train_labels.numpy()
+            labels = train_label.numpy()
             result = eval_vis.evaluate_model(train_label , labels)
 
 
