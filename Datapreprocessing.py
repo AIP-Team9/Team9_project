@@ -109,11 +109,11 @@ plt.figure(figsize=(10, 8))
 sns.heatmap(corr, annot=True, fmt=".2f", cmap='coolwarm')
 plt.show()
 
-sns.pairplot(data, vars=columns_to_visualize, hue='관측초미세먼지')
+sns.pairplot(data, vars=columns_to_visualize, hue='관측미세먼지')
 plt.show()
 
-features = [col for col in columns_to_visualize if col not in ['관측초미세먼지', '관측극초미세먼지']]
-target_vars = ['관측초미세먼지', '관측극초미세먼지']
+features = [col for col in columns_to_visualize if col not in ['관측미세먼지', '관측초미세먼지']]
+target_vars = ['관측미세먼지', '관측초미세먼지']
 
 for feature in features:
     for target in target_vars:
